@@ -8,6 +8,7 @@ import ChatWindow from './Components/ChatWindow'
 import Appp from './Components/Appp'
 import AgentDashboard from './Components/AgentDashboard'
 import CalendarApp from './Components/CalendarApp'
+import LLMChatApp from './Components/LLMChatApp'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -16,8 +17,8 @@ function App() {
     <>
       <section id="center">
         <div className="hero">
-<AgentDashboard/>
-<CalendarApp/>
+{/* <AgentDashboard/> */}
+<LLMChatApp/>
 
 
         </div>

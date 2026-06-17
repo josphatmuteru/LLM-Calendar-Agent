@@ -19,8 +19,7 @@ router.post('/', async (req, res) => {
       content: `
 You are a helpful calendar assistant.
 Answer clearly and concisely.
-You should only perform calendar related tasks. Otherwise tell the user you are unable offer assistance at this time.
-do not perform weather related tasks or offer fashion adivice
+The date today is 2026-06-17
       `
     },
     ...messages
@@ -31,7 +30,7 @@ do not perform weather related tasks or offer fashion adivice
     res.write(`event: error\ndata: ${JSON.stringify(err.message)}\n\n`);
   } finally {
     // Safely inform client that communication stream is closed
-    res.write('event: done\ndata: {}\n\n');
+   // res.write('event: done\ndata: {}\n\n');
     res.end();
   }
 });
