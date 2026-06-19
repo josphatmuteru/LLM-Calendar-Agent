@@ -1,12 +1,17 @@
 import CalendarApp from './Components/CalendarApp.tsx';
+import EmailClientApp from './Components/emailClientApp.tsx';
 import LLMChatApp from './Components/LLMChatApp.tsx';
 
 
 import { useState } from "react";
 
 export default function App() {
+  
+  const [isShowingCalendarApp, setIsShowingCalendarApp] = useState(true);
 
-
+    const handleSetIsShowingCalendarApp = (state) => {
+    setIsShowingCalendarApp(state);
+  };
 
   return (
     <div className="min-h-screen w-full bg-[#f4f4f4] flex flex-col items-center justify-center p-4 lg:p-8 overflow-y-auto font-sans">
@@ -19,17 +24,43 @@ export default function App() {
           {/* Connected Apps Row */}
           <div className="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-5 lg:gap-7 w-full">
             <div className="w-full lg:w-auto flex-none flex items-center justify-center lg:justify-start">
-              <LLMChatApp/>
+              <LLMChatApp     setIsShowingCalendarApp={handleSetIsShowingCalendarApp}
+                isShowingCalendarApp={isShowingCalendarApp} />
             </div>
             <div className="w-full lg:flex-1 flex items-center justify-center lg:justify-start min-w-0">
-         
+              {isShowingCalendarApp ? (
                 <CalendarApp />
+              ) : (
+                <EmailClientApp />
+              )}
 
             </div>
           </div>
         </div>
 
-        
+                {/* Outer Navigation row */}
+        <div className="flex items-center gap-3 self-start">
+          <button
+            onClick={() => handleSetIsShowingCalendarApp(true)}
+            className={`px-5 py-2.5 text-sm font-semibold rounded-lg transition-all cursor-pointer shadow-xs border whitespace-nowrap ${
+              isShowingCalendarApp
+                ? "bg-[#0b5c9e] text-white border-[#063c68]"
+                : "bg-white text-[#0b5c9e] border-[#0b5c9e]/20 hover:bg-slate-50"
+            }`}
+          >
+            Calendar App
+          </button>
+          <button
+            onClick={() => handleSetIsShowingCalendarApp(false)}
+            className={`px-5 py-2.5 text-sm font-semibold rounded-lg transition-all cursor-pointer shadow-xs border whitespace-nowrap ${
+              !isShowingCalendarApp
+                ? "bg-[#0b5c9e] text-white border-[#063c68]"
+                : "bg-white text-[#0b5c9e] border-[#0b5c9e]/20 hover:bg-slate-50"
+            }`}
+          >
+            Email App
+          </button>
+        </div>
         </div>
 
     
