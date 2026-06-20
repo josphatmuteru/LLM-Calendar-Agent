@@ -1,7 +1,7 @@
 export async function streamAgentChat(messages, onThinking, onContent, onDone) {
 
     
-  const response = await fetch('http://localhost:3000/chat', {
+  const response = await fetch('http://localhost:3005/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ messages})
@@ -47,7 +47,7 @@ export async function sendMessage(message) {
 console.log(message)
 
 const response = await fetch(
-  "http://localhost:3000/chat",
+  "http://localhost:3005/chat",
    {
     method: "POST", 
     headers: {

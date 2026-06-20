@@ -3,143 +3,35 @@ import { sendToOllama } from '../llm/ollama.js';
 
 const AGENT_NETWORK_TOOLS_SPECS = [
   {
-    name: 'list_emails',
-    endpoint: '/api/agent/tools/list_emails',
-    method: 'POST',
-    description: 'Retrieves a list of emails. Optionally filters by a specific folder (Inbox, Sent, Drafts, Archive, Trash).',
-    parameters: {
-      type: 'OBJECT',
-      properties: {
-        folder: {
-          type: 'STRING',
-          description: 'The target folder to read from. e.g. "Inbox", "Sent", "Drafts", "Archive", "Trash"',
-          enum: ['Inbox', 'Sent', 'Drafts', 'Archive', 'Trash']
-        }
-      }
-    }
-  },
-  {
-    name: 'search_emails',
-    endpoint: '/api/agent/tools/search_emails',
-    method: 'POST',
-    description: 'Searches the entire email logs for a keyword query. Searches in subject, sender details, and message body text.',
-    parameters: {
-      type: 'OBJECT',
-      properties: {
-        query: {
-          type: 'STRING',
-          description: 'The keyword search term.'
-        }
-      },
-      required: ['query']
-    }
-  },
-  {
-    name: 'send_email',
-    endpoint: '/api/agent/tools/send_email',
-    method: 'POST',
-    description: 'Dispatches or drafts a brand new outgoing email conversation. Moves it to the "Sent" folder.',
-    parameters: {
-      type: 'OBJECT',
-      properties: {
-        recipientEmail: {
-          type: 'STRING',
-          description: 'The email address of the receiver.'
-        },
-        subject: {
-          type: 'STRING',
-          description: 'Heading or subject line.'
-        },
-        body: {
-          type: 'STRING',
-          description: 'Markdown-compatible body content.'
-        }
-      },
-      required: ['recipientEmail', 'subject', 'body']
-    }
-  },
-  {
-    name: 'archive_email',
-    endpoint: '/api/agent/tools/archive_email',
-    method: 'POST',
-    description: 'Archives a target email by its unique ID, removing it from Inbox.',
-    parameters: {
-      type: 'OBJECT',
-      properties: {
-        id: {
-          type: 'STRING',
-          description: 'The unique ID identifier of the target email'
-        }
-      },
-      required: ['id']
-    }
-  },
-  {
-    name: 'delete_email',
-    endpoint: '/api/agent/tools/delete_email',
-    method: 'POST',
-    description: 'Safely deletes an email by placing it inside Trash, or deletes it permanently if it resides in Trash.',
-    parameters: {
-      type: 'OBJECT',
-      properties: {
-        id: {
-          type: 'STRING',
-          description: 'Unique ID identifier of the email.'
-        }
-      },
-      required: ['id']
-    }
-  },
-  {
-    name: 'mark_as_read',
-    endpoint: '/api/agent/tools/mark_as_read',
-    method: 'POST',
-    description: 'Modifies the read/unread status on a specific email conversation.',
-    parameters: {
-      type: 'OBJECT',
-      properties: {
-        id: {
-          type: 'STRING',
-          description: 'Unique ID of the email.'
-        },
-        read: {
-          type: 'BOOLEAN',
-          description: 'True for read, false for unread.'
-        }
-      },
-      required: ['id', 'read']
-    }
-  },
-  {
     name: 'list_events',
-    endpoint: '/api/agent/tools/list_events',
-    method: 'POST',
-    description: 'Retrieves active scheduled calendar events. Optionally filters down to a specific date.',
+    endpoint: '/api/calendar/events',
+    method: 'GET',
+    description: 'Retrieves a list of calendar events. Optionally filters events scheduled on a specific date.',
     parameters: {
       type: 'OBJECT',
       properties: {
         date: {
           type: 'STRING',
-          description: 'The search date (YYYY-MM-DD format). Defaults to all events if omitted.'
+          description: 'Optional date filter in YYYY-MM-DD format.'
         }
       }
     }
   },
   {
     name: 'check_availability',
-    endpoint: '/api/agent/tools/check_availability',
-    method: 'POST',
-    description: 'Checks for conflicts and busy status in your planner for a given date and time range.',
+    endpoint: '/api/calendar/availability',
+    method: 'GET',
+    description: 'Checks schedule conflicts and availability for a specified date and time interval range.',
     parameters: {
       type: 'OBJECT',
       properties: {
         date: {
           type: 'STRING',
-          description: 'Requested schedule date (YYYY-MM-DD format).'
+          description: 'The target date in YYYY-MM-DD format.'
         },
         timeSlot: {
           type: 'STRING',
-          description: 'Requested time slot filter (e.g., "11.00 AM").'
+          description: 'The explicit time range interval slot to check (e.g., "11.00", "9.00 AM – 10.30 PM").'
         }
       },
       required: ['date', 'timeSlot']
@@ -147,28 +39,27 @@ const AGENT_NETWORK_TOOLS_SPECS = [
   },
   {
     name: 'create_event',
-    endpoint: '/api/agent/tools/create_event',
+    endpoint: '/api/calendar/events',
     method: 'POST',
-    description: 'Schedules and books a new event onto the calendar planner.',
+    description: 'Schedules and provisions a new calendar event entry on a specified date and time block.',
     parameters: {
       type: 'OBJECT',
       properties: {
         title: {
           type: 'STRING',
-          description: 'Title of the event.'
+          description: 'The explicit summary title text description of the event.'
         },
         date: {
           type: 'STRING',
-          description: 'Target scheduling date (YYYY-MM-DD format).'
+          description: 'The target scheduling date parameter in YYYY-MM-DD format.'
         },
         time: {
           type: 'STRING',
-          description: 'Target time range (e.g., "9.00 AM – 10.30 AM").'
+          description: 'The specific timeframe block string (e.g., "9.00 AM – 10.30 PM").'
         },
         color: {
           type: 'STRING',
-          description: 'Optional aesthetic theme color accent.',
-          enum: ['blue', 'green', 'beige']
+          description: 'Optional categorization color label accent matching system themes (e.g., "blue", "green", "beige").'
         }
       },
       required: ['title', 'date', 'time']
@@ -176,15 +67,144 @@ const AGENT_NETWORK_TOOLS_SPECS = [
   },
   {
     name: 'delete_event',
-    endpoint: '/api/agent/tools/delete_event',
-    method: 'POST',
-    description: 'Cancels or removes a scheduled calendar event by its unique ID.',
+    endpoint: '/api/calendar/events/:id',
+    method: 'DELETE',
+    description: 'Cancels and removes a target operational calendar event from the persistent registry by its system ID key.',
     parameters: {
       type: 'OBJECT',
       properties: {
         id: {
           type: 'STRING',
-          description: 'Unique ID identifier of the event.'
+          description: 'The specific database event identifier reference to drop.'
+        }
+      },
+      required: ['id']
+    }
+  },
+  {
+    name: 'list_emails',
+    endpoint: '/api/emails',
+    method: 'GET',
+    description: 'Retrieves active mailbox arrays. Optionally partitions entries filtered strictly by systemic folder labels.',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        folder: {
+          type: 'STRING',
+          description: 'Target mailbox category directory filter segment.',
+          enum: ['Inbox', 'Sent', 'Drafts', 'Archive', 'Trash']
+        }
+      }
+    }
+  },
+  {
+    name: 'search_emails',
+    endpoint: '/api/emails/search',
+    method: 'GET',
+    description: 'Queries communication history sequences across text tokens, body blocks, metadata fragments, or structured search operators.',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        q: {
+          type: 'STRING',
+          description: 'The literal string sequence query or structural token payload to execute match actions against.'
+        }
+      },
+      required: ['q']
+    }
+  },
+  {
+    name: 'send_email',
+    endpoint: '/api/emails',
+    method: 'POST',
+    description: 'Dispatches or initiates an email sequence, mapping payloads dynamically into directory locations.',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        recipientEmail: {
+          type: 'STRING',
+          description: 'The target destination electronic mailing endpoint reference address.'
+        },
+        subject: {
+          type: 'STRING',
+          description: 'Header text or core title descriptor line for the context payload structure.'
+        },
+        body: {
+          type: 'STRING',
+          description: 'The descriptive contextual plaintext string representation payload mapping message lines.'
+        },
+        folder: {
+          type: 'STRING',
+          description: 'Optional destination folder override if drafting vs sending directly.',
+          enum: ['Inbox', 'Sent', 'Drafts', 'Archive', 'Trash']
+        }
+      },
+      required: ['recipientEmail', 'subject', 'body']
+    }
+  },
+  {
+    name: 'archive_email',
+    endpoint: '/api/emails/:id/archive',
+    method: 'PUT',
+    description: 'Safely transfers an email sequence reference into the global archive repository timeline block.',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        id: {
+          type: 'STRING',
+          description: 'The primary tracking record system ID of the email payload entry to change.'
+        }
+      },
+      required: ['id']
+    }
+  },
+  {
+    name: 'mark_as_read',
+    endpoint: '/api/emails/:id/read',
+    method: 'PUT',
+    description: 'Modifies the read/unread boolean processing state flags tracking standard envelope records.',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        id: {
+          type: 'STRING',
+          description: 'The unique sequence ID key representing the item row target.'
+        },
+        read: {
+          type: 'BOOLEAN',
+          description: 'Explicit operational state payload boolean parameter representing visibility markers (true = read, false = unread).'
+        }
+      },
+      required: ['id', 'read']
+    }
+  },
+  {
+    name: 'delete_email',
+    endpoint: '/api/emails/:id',
+    method: 'DELETE',
+    description: 'Moves active logs to intermediate trash storage repositories, or enforces permanent truncation if target is already in Trash.',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        id: {
+          type: 'STRING',
+          description: 'The target dataset execution pointer tracking ID key to process deletion actions upon.'
+        }
+      },
+      required: ['id']
+    }
+  },
+  {
+    name: 'restore_email',
+    endpoint: '/api/emails/:id/restore',
+    method: 'PUT',
+    description: 'Rolls back system delete hooks by recovering standard message logs from Trash directories back into active Inbox timelines.',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        id: {
+          type: 'STRING',
+          description: 'The identification database tracking row index key string element to recover.'
         }
       },
       required: ['id']
@@ -398,7 +418,7 @@ export const AGENT_FUNCTION_DECLARATIONS = [
 ];
 
 // Base URL configuration for your local backend network service
-const BASE_SERVER_URL = 'http://localhost:3003';
+const BASE_SERVER_URL = 'http://localhost:3005';
 
 /**
  * Creates a fast O(1) hash map dictionary directly from your specs array
@@ -412,17 +432,80 @@ const toolSpecsMap = new Map(
  * @param {string} toolName - Name of function returned from LLM (e.g. 'check_availability')
  * @param {Object} args - Arguments generated by LLM text logic
  */
-async function executeDynamicTool(toolName, args) {
-  const spec = toolSpecsMap.get(toolName);
+// async function executeDynamicTool(toolName, args) {
+//   const spec = toolSpecsMap.get(toolName);
   
 
-console.log("//////gggggggg///////gggggg///////ggg/g/g/g/", toolName, spec )
+//   if (!spec) {
+//     throw new Error(`Tool "${toolName}" is not registered in AGENT_NETWORK_TOOLS_SPECS.`);
+//   }
+
+//   const targetUrl = `${BASE_SERVER_URL}${spec.endpoint}`;
+//   const options = {
+//     method: spec.method || 'POST',
+//     headers: {
+//       'Content-Type': 'application/json'
+//     }
+//   };
+
+//   // Safe payload builder based on defined HTTP verbs
+//   if (options.method === 'GET') {
+//     const queryParams = new URLSearchParams(args).toString();
+//     return fetch(`${targetUrl}?${queryParams}`, { method: 'GET' }).then(res => res.json());
+//   }
+
+//    // POST
+//   if (options.method === 'PUT') {
+//     // Extract route parameter fields (like id) separate from request body content parameters
+//     const { id, ...bodyFields } = args;
+    
+//     // Construct target URL string substituting the specific resource identifier index if needed
+//     const executionUrl = id ? targetUrl.replace(':id', id) : targetUrl;
+    
+//     return fetch(executionUrl, {
+//       method: 'PUT',
+//       headers: {
+//         'Content-Type': 'application/json'
+//       },
+//       body: JSON.stringify(bodyFields)
+//     }).then(res => res.json());
+//   }
+
+//   // POST: Send arguments directly as the main request body JSON object
+//   options.body = JSON.stringify(args || {});
+
+//   console.log("request", targetUrl, " ",  " " , options);
+
+//   const response = await fetch(targetUrl, options);
+  
+//   if (!response.ok) {
+//     throw new Error(`Network tool execution failed on ${spec.endpoint}. Status: ${response.status}`);
+//   }
+// const results = await response.json()
+// console.log("results", results);
+//   return  results;
+// }
+
+
+async function executeDynamicTool(toolName, args) {
+  const spec = toolSpecsMap.get(toolName);
 
   if (!spec) {
     throw new Error(`Tool "${toolName}" is not registered in AGENT_NETWORK_TOOLS_SPECS.`);
   }
 
-  const targetUrl = `${BASE_SERVER_URL}${spec.endpoint}`;
+  // 1. Extract path parameter fields ('id') separate from request body content parameters
+  const { id, ...cleanedArgs } = args || {};
+
+  // 2. Construct the dynamic URL path, substituting ':id' with the actual resource index value if specified
+  let targetUrl = `${BASE_SERVER_URL}${spec.endpoint}`;
+  if (id && targetUrl.includes(':id')) {
+    targetUrl = targetUrl.replace(':id', encodeURIComponent(id));
+  } else if (id && !targetUrl.includes(':id')) {
+    // Fallback: If 'id' is supplied but ':id' placeholder isn't in spec, automatically append it
+    targetUrl = `${targetUrl}/${encodeURIComponent(id)}`;
+  }
+
   const options = {
     method: spec.method || 'POST',
     headers: {
@@ -430,27 +513,37 @@ console.log("//////gggggggg///////gggggg///////ggg/g/g/g/", toolName, spec )
     }
   };
 
-  // Safe payload builder based on defined HTTP verbs
+  // 3. Configure Payload Structures dynamically based on standard HTTP verbs
   if (options.method === 'GET') {
-    const queryParams = new URLSearchParams(args).toString();
-    return fetch(`${targetUrl}?${queryParams}`, { method: 'GET' }).then(res => res.json());
+    // Serialize all arguments into standard URL query strings
+    const queryParams = new URLSearchParams(cleanedArgs).toString();
+    if (queryParams) {
+      targetUrl = `${targetUrl}?${queryParams}`;
+    }
+  } else if (options.method === 'PUT' || options.method === 'POST') {
+    // Assign payload elements directly inside the outgoing request body
+    options.body = JSON.stringify(cleanedArgs);
+  } else if (options.method === 'DELETE') {
+    // If the DELETE endpoint accepts additional body configurations, attach them
+    if (Object.keys(cleanedArgs).length > 0) {
+      options.body = JSON.stringify(cleanedArgs);
+    }
   }
 
-  // POST/PUT: Send arguments directly as the main request body JSON object
-  options.body = JSON.stringify(args || {});
-
-  console.log("request", targetUrl, " ",  " " , options);
+  // 4. Centralized Network Tracing & Execution Pipeline
+  console.log("Request Trace:", options.method, targetUrl, options.body || '');
 
   const response = await fetch(targetUrl, options);
   
   if (!response.ok) {
-    throw new Error(`Network tool execution failed on ${spec.endpoint}. Status: ${response.status}`);
+    throw new Error(`Network tool execution failed on ${spec.endpoint}. Status: ${response.status} (${response.statusText})`);
   }
-const results = await response.json()
-console.log("results", results);
-  return  results;
-}
 
+  const results = await response.json();
+  console.log("Execution Results:", results);
+  
+  return results;
+}
 
 
 // Define tools
