@@ -20,6 +20,8 @@ import {
 import { DEFAULT_EVENTS, getDaysInMonth, formatDateLong, getWeekDays } from './calendarData';
 import { CalendarEvent, CalendarView } from '../types';
 
+const baseUrl = import.meta.env.VITE_API_BASE_URL || ''; 
+
 export default function CalendarApp() {
   // View states
   const [view, setView] = useState<CalendarView>('Month');
@@ -47,18 +49,30 @@ export default function CalendarApp() {
   const [newColor, setNewColor] = useState<'blue' | 'green' | 'beige'>('blue');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Sync state with localStorage
-  useEffect(() => {
-    localStorage.setItem('calendar_dashboard_events', JSON.stringify(events));
-  }, [events]);
 
-  // Sync state when local storage is seeded or modified by AI Agent custom tools
+
+    // Sync state with server backend and localStorage
+  const syncWithServer = async () => {
+    try {
+      const res = await fetch(`${baseUrl}/api/calendar/events`);
+      const json = await res.json();
+      if (json && json.success && Array.isArray(json.data)) {
+        setEvents(json.data);
+        localStorage.setItem('calendar_dashboard_events', JSON.stringify(json.data));
+      }
+    } catch (err) {
+      console.error('Failed to sync events with server:', err);
+    }
+  };
+
+    // Sync state when local storage is seeded or modified by AI Agent custom tools
   useEffect(() => {
     const handleSync = () => {
       const saved = localStorage.getItem('calendar_dashboard_events');
       if (saved) {
         setEvents(JSON.parse(saved));
       }
+      syncWithServer();
     };
     window.addEventListener('storage', handleSync);
     window.addEventListener('agent-tools-update', handleSync);
@@ -67,6 +81,27 @@ export default function CalendarApp() {
       window.removeEventListener('agent-tools-update', handleSync);
     };
   }, []);
+
+//   // Sync state with localStorage
+//   useEffect(() => {
+//     localStorage.setItem('calendar_dashboard_events', JSON.stringify(events));
+//   }, [events]);
+
+//   // Sync state when local storage is seeded or modified by AI Agent custom tools
+//   useEffect(() => {
+//     const handleSync = () => {
+//       const saved = localStorage.getItem('calendar_dashboard_events');
+//       if (saved) {
+//         setEvents(JSON.parse(saved));
+//       }
+//     };
+//     window.addEventListener('storage', handleSync);
+//     window.addEventListener('agent-tools-update', handleSync);
+//     return () => {
+//       window.removeEventListener('storage', handleSync);
+//       window.removeEventListener('agent-tools-update', handleSync);
+//     };
+//   }, []);
 
   // Format header display dynamically after user starts selecting
   const handleDateSelect = (dateStr: string) => {
@@ -96,31 +131,48 @@ export default function CalendarApp() {
     triggerToast('Dashboard reset to defaults');
   };
 
-  // Add event action
-  const handleAddEvent = (e: FormEvent) => {
+   // Add event action
+  const handleAddEvent = async (e: FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
 
-    const newEvent: CalendarEvent = {
-      id: `custom_${Date.now()}`,
-      title: newTitle.trim(),
-      time: newTime.trim(),
-      date: selectedDate,
-      color: newColor
-    };
-
-    setEvents(prev => [...prev, newEvent]);
-    setNewTitle('');
-    setNewTime('9.00 AM – 10.30 PM');
-    setShowAddForm(false);
-    triggerToast(`"${newEvent.title}" scheduled!`);
+    try {
+      const res = await fetch(`${baseUrl}/api/calendar/events`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: newTitle.trim(),
+          time: newTime.trim(),
+          date: selectedDate,
+          color: newColor
+        })
+      });
+      const json = await res.json();
+      if (json && json.success) {
+        setNewTitle('');
+        setNewTime('9.00 AM – 10.30 PM');
+        setShowAddForm(false);
+        triggerToast(`"${newTitle.trim()}" scheduled!`);
+        syncWithServer();
+      }
+    } catch (err) {
+      console.error('Failed to schedule event on server:', err);
+    }
   };
 
   // Delete event action
-  const handleDeleteEvent = (id: string, name: string) => {
-    setEvents(prev => prev.filter(item => item.id !== id));
-    triggerToast(`Removed "${name}"`);
+  const handleDeleteEvent = async (id: string, name: string) => {
+    try {
+      await fetch(`${baseUrl}/api/calendar/events/${id}`, {
+        method: 'DELETE'
+      });
+      triggerToast(`Removed "${name}"`);
+      syncWithServer();
+    } catch (err) {
+      console.error('Failed to delete event on server:', err);
+    }
   };
+
 
   // Pre-calculate month name and calendar grid
   const monthName = useMemo(() => {

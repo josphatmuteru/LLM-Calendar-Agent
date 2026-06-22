@@ -20,7 +20,40 @@ export default function App() {
         {/* Main Side-by-Side Outer Container mimicking mockups */}
         <div className="bg-[#eeeded] border-[1.5px] border-[#222222] rounded-lg p-5 lg:p-7 flex flex-col gap-6 shadow-[0_4px_24px_rgba(0,0,0,0.04)]">
 
+  <div className="w-full flex flex-col md:flex-row items-stretch justify-between gap-5 border-b border-gray-300/40 pb-5">
+            <fieldset 
+              style={{ padding: '8px' }}
+              className="flex-1 border-[1.5px] border-[#0b5c9e] rounded-lg relative bg-white"
+            >
+              <legend 
+                style={{ background: 'linear-gradient(to bottom, #eeeded 50%, #ffffff 50%)' }}
+                className="px-2 font-bold text-xs text-[#0b5c9e] tracking-tight ml-2"
+              >
+                Scenario
+              </legend>
+              <p className="text-sm text-[#222222] font-semibold leading-relaxed">
+               
+              </p>
+            </fieldset>
 
+            <div className="flex flex-col shrink-0 md:w-[240px]">
+              <div className="flex flex-col justify-between h-full md:pt-[7.5px] gap-2 md:gap-1">
+                <button
+                  // onClick={handleGenerateScenario}
+                  className="w-full h-[32px] px-3 bg-[#0b5c9e] hover:bg-[#063c68] text-white text-[11px] sm:text-xs font-bold rounded-lg transition-all border border-[#063c68] cursor-pointer flex items-center justify-center text-center whitespace-nowrap active:scale-98 shadow-xs"
+                >
+                  Generate Different Scenario
+                </button>
+                <button
+                  // onClick={handleDemonstrateScenario}
+                  className="w-full h-[32px] px-3 bg-[#0b5c9e] hover:bg-[#063c68] text-white text-[11px] sm:text-xs font-bold rounded-lg transition-all border border-[#063c68] cursor-pointer flex items-center justify-center text-center whitespace-nowrap active:scale-98 shadow-xs"
+                >
+                  Demonstrate Scenario
+                </button>
+              </div>
+            </div>
+          </div>
+          
           {/* Connected Apps Row */}
           <div className="flex flex-col lg:flex-row items-center lg:items-start justify-center gap-5 lg:gap-7 w-full">
             <div className="w-full lg:w-auto flex-none flex items-center justify-center lg:justify-start">

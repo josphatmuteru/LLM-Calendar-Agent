@@ -146,11 +146,11 @@ export default function EmailClientApp() {
   });
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
-
+const baseUrl = import.meta.env.VITE_API_BASE_URL || ''; 
   // Sync state with server backend and localStorage
   const syncWithServer = async () => {
     try {
-      const res = await fetch('/api/emails');
+      const res = await fetch(`${baseUrl}/api/emails`);
       const json = await res.json();
       if (json && json.success && Array.isArray(json.data)) {
         setEmails(json.data);
@@ -205,7 +205,7 @@ export default function EmailClientApp() {
   // Helper to mark email as read
   const markAsRead = async (id: string) => {
     try {
-      await fetch(`/api/emails/${id}/read`, {
+      await fetch(`${baseUrl}/api/emails/${id}/read`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ read: true })
@@ -247,7 +247,7 @@ export default function EmailClientApp() {
   // Send or Draft creation handler
   const handleSendEmail = async (to: string, subject: string, body: string, isDraft = false) => {
     try {
-      const res = await fetch('/api/emails', {
+      const res = await fetch(`${baseUrl}/api/email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -295,7 +295,7 @@ export default function EmailClientApp() {
   // Archive handler
   const handleArchive = async (target: Email) => {
     try {
-      await fetch(`/api/emails/${target.id}/archive`, {
+      await fetch(`${baseUrl}/api/emails/${target.id}/archive`, {
         method: 'PUT'
       });
       setToast({ message: 'Email moved to Archive.', type: 'info' });
@@ -316,7 +316,7 @@ export default function EmailClientApp() {
   // Trash/Delete handler
   const handleDelete = async (target: Email) => {
     try {
-      await fetch(`/api/emails/${target.id}`, {
+      await fetch(`${baseUrl}/api/emails/${target.id}`, {
         method: 'DELETE'
       });
       setToast({ message: target.folder === 'Trash' ? 'Email permanently deleted.' : 'Email moved to Trash.', type: 'info' });
@@ -337,7 +337,7 @@ export default function EmailClientApp() {
   // Restore/Move to inbox handler
   const handleRestore = async (target: Email) => {
     try {
-      await fetch(`/api/emails/${target.id}/restore`, {
+      await fetch(`${baseUrl}/api/emails/${target.id}/restore`, {
         method: 'PUT'
       });
       setToast({ message: 'Email restored to Inbox.', type: 'success' });
