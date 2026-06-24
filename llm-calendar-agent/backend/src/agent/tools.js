@@ -206,7 +206,111 @@ export const AGENT_NETWORK_TOOLS_SPECS = [
       },
       required: ['id']
     }
-  }
+  },
+
+  {
+    name: 'seed_scenarios',
+    endpoint: '/api/scenarios/seed',
+    method: 'POST',
+    description: 'Seeds the application database state by provisioning a baseline bulk collection of historical email records and calendar events.',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        emails: {
+          type: 'ARRAY',
+          description: 'A comprehensive collection of user email records to pre-populate systemic mailboxes.',
+          items: {
+            type: 'OBJECT',
+            properties: {
+              id: {
+                type: 'STRING',
+                description: 'Unique internal reference ID identifier string for the email item.'
+              },
+              senderName: {
+                type: 'STRING',
+                description: 'Display name identity signature representing the dispatcher entity.'
+              },
+              senderEmail: {
+                type: 'STRING',
+                description: 'The full originating transmission internet electronic mailbox address.'
+              },
+              recipientEmail: {
+                type: 'STRING',
+                description: 'The explicit destination target user electronic mailbox routing address.'
+              },
+              subject: {
+                type: 'STRING',
+                description: 'The core descriptive topic header summary text for the letter entry.'
+              },
+              body: {
+                type: 'STRING',
+                description: 'The plaintext narrative content context block payload included inside the email.'
+              },
+              timestamp: {
+                type: 'STRING',
+                description: 'Short dynamic relative timeline time string representation (e.g., "9:15 AM", "Yesterday").'
+              },
+              dateStr: {
+                type: 'STRING',
+                description: 'Fully expanded timeline target date marker string value (e.g., "Jun 13, 2026").'
+              },
+              folder: {
+                type: 'STRING',
+                description: 'System folder category assignment destination boundary (e.g., "Inbox", "Sent", "Drafts", "Archive", "Trash").'
+              },
+              read: {
+                type: 'BOOLEAN',
+                description: 'Status state boolean flag configuring read alert layout presentation tiers.'
+              }
+            },
+            required: [
+              'id',
+              'senderName',
+              'senderEmail',
+              'recipientEmail',
+              'subject',
+              'body',
+              'timestamp',
+              'dateStr',
+              'folder',
+              'read'
+            ]
+          }
+        },
+        calendarEvents: {
+          type: 'ARRAY',
+          description: 'An itemized list of pre-scheduled calendar appointments to display across chronological agenda workflows.',
+          items: {
+            type: 'OBJECT',
+            properties: {
+              id: {
+                type: 'STRING',
+                description: 'Unique programmatic lookup identifier parameter key sequence code.'
+              },
+              title: {
+                type: 'STRING',
+                description: 'The primary headline event agenda label detail string description.'
+              },
+              time: {
+                type: 'STRING',
+                description: 'The explicit specific block slot sequence timeframe (e.g., "9.00 AM – 10.30 PM").'
+              },
+              date: {
+                type: 'STRING',
+                description: 'The corresponding tracking appointment calendar target date in YYYY-MM-DD format.'
+              },
+              color: {
+                type: 'STRING',
+                description: 'Optional categorization theme accent context marker code (e.g., "blue", "green", "beige").'
+              }
+            },
+            required: ['id', 'title', 'time', 'date', 'color']
+          }
+        }
+      },
+      required: ['emails', 'calendarEvents']
+    }
+  },
 ];
 
 
@@ -413,3 +517,112 @@ export const AGENT_FUNCTION_DECLARATIONS = [
     }
   }
 ];
+
+
+export const SCENARIOS_AGENT_FUNCTION_DECLARATIONS = [
+    {
+    type: 'function',
+    function: {
+      name: 'seed_scenarios',
+      description: 'Seeds the backend database with pre-populated systemic data collections, overwriting or appending email logs and calendar schedules globally.',
+      parameters: {
+        type: 'object',
+        properties: {
+          calendarEvents: {
+            type: 'array',
+            description: 'A list of explicit calendar appointment parameters to load into the agenda viewport dashboard.',
+            items: {
+              type: 'object',
+              properties: {
+                id: {
+                  type: 'string',
+                  description: 'Unique identifier for the calendar event entries.'
+                },
+                title: {
+                  type: 'string',
+                  description: 'The explicit summary title text description of the event.'
+                },
+                time: {
+                  type: 'string',
+                  description: 'The specific timeframe block string (e.g., "9.00 AM – 10.30 PM").'
+                },
+                date: {
+                  type: 'string',
+                  description: 'The target scheduling date parameter strictly formatted as "YYYY-MM-DD".'
+                },
+                color: {
+                  type: 'string',
+                  description: 'Visual category accent indicator tags matching theme variables (e.g., "blue", "green", "beige").'
+                }
+              },
+              required: ['id', 'title', 'time', 'date', 'color']
+            }
+          },
+          emails: {
+            type: 'array',
+            description: 'A baseline collection of historical and new mailbox files across different systemic folders.',
+            items: {
+              type: 'object',
+              properties: {
+                id: {
+                  type: 'string',
+                  description: 'Unique identifier key sequence for the internal email index tracker.'
+                },
+                senderName: {
+                  type: 'string',
+                  description: 'Human-readable name signature representing the message dispatcher source.'
+                },
+                senderEmail: {
+                  type: 'string',
+                  description: 'The standard fully qualified outgoing internet transmission email address syntax.'
+                },
+                recipientEmail: {
+                  type: 'string',
+                  description: 'The targeted reception mailbox user alias destination routing account address.'
+                },
+                subject: {
+                  type: 'string',
+                  description: 'The primary headline topic summary or brief title header text for the letter.'
+                },
+                body: {
+                  type: 'string',
+                  description: 'The full text contents, multiline documentation paragraphs, or message text inside the email.'
+                },
+                timestamp: {
+                  type: 'string',
+                  description: 'Short contextual operational clock time text string (e.g., "Yesterday", "9:15 AM", "Jun 12").'
+                },
+                dateStr: {
+                  type: 'string',
+                  description: 'Fully qualified calendar stamp representation value (e.g., "Jun 13, 2026").'
+                },
+                folder: {
+                  type: 'string',
+                  description: 'Systemic inbox container classifications folder target placement.',
+                  enum: ['Inbox', 'Sent', 'Drafts', 'Archive', 'Trash']
+                },
+                read: {
+                  type: 'boolean',
+                  description: 'Boolean flag controlling unread alert indicator badges and bold font states.'
+                }
+              },
+              required: [
+                'id',
+                'senderName',
+                'senderEmail',
+                'recipientEmail',
+                'subject',
+                'body',
+                'timestamp',
+                'dateStr',
+                'folder',
+                'read'
+              ]
+            }
+          }
+        },
+        required: ['emails', 'calendarEvents']
+      }
+    }
+  },
+]

@@ -21,6 +21,28 @@ export interface Email {
   read: boolean;
 }
 
+[{
+  id: 'string',
+  title: "string",
+  time: "string",
+  date: 'string', // format "YYYY-MM-DD"
+  color: 'string'
+}]
+
+[{
+  id: "string",
+  senderName: "string",
+  senderEmail: "string",
+  recipientEmail: "string",
+  subject: "string",
+  body: "string",
+  timestamp: "string",
+  dateStr: "string",
+  folder: "FolderType",
+  read: "boolean",
+}
+]
+
 
 
 

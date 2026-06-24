@@ -1,3 +1,7 @@
+// Key constants matching application storage keys
+const EMAILS_STORAGE_KEY = 'company_emails_client';
+const CALENDAR_STORAGE_KEY = 'calendar_dashboard_events';
+
 // Baseline fallback data for calendar and email
 const DEFAULT_CALENDAR_EVENTS = [
   { id: 'e1', title: 'Stand up', time: '9.00 AM – 10.30 PM', date: '2026-06-18', color: 'blue' },
@@ -40,6 +44,49 @@ const DEFAULT_EMAILS = [
     read: true,
   }
 ];
+
+
+// Helper to notify the React components to sync their states when storage updates via tool execution
+function notifyStorageUpdate() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event('storage'));
+    window.dispatchEvent(new CustomEvent('agent-tools-update'));
+  }
+}
+
+// Ensure database helper
+function getStoredEmails() {
+  if (typeof localStorage === 'undefined') return DEFAULT_EMAILS;
+  const saved = localStorage.getItem(EMAILS_STORAGE_KEY);
+  if (!saved) {
+    localStorage.setItem(EMAILS_STORAGE_KEY, JSON.stringify(DEFAULT_EMAILS));
+    return DEFAULT_EMAILS;
+  }
+  return JSON.parse(saved);
+}
+
+function setStoredEmails(emails) {
+  if (typeof localStorage === 'undefined') return;
+  localStorage.setItem(EMAILS_STORAGE_KEY, JSON.stringify(emails));
+  notifyStorageUpdate();
+}
+
+function getStoredEvents() {
+  if (typeof localStorage === 'undefined') return DEFAULT_CALENDAR_EVENTS;
+  const saved = localStorage.getItem(CALENDAR_STORAGE_KEY);
+  if (!saved) {
+    localStorage.setItem(CALENDAR_STORAGE_KEY, JSON.stringify(DEFAULT_CALENDAR_EVENTS));
+    return DEFAULT_CALENDAR_EVENTS;
+  }
+  return JSON.parse(saved);
+}
+
+function setStoredEvents(events ) {
+  if (typeof localStorage === 'undefined') return;
+  localStorage.setItem(CALENDAR_STORAGE_KEY, JSON.stringify(events));
+  notifyStorageUpdate();
+}
+
 
 // Backend in-memory state stores
 let emails = [...DEFAULT_EMAILS];
@@ -99,9 +146,10 @@ export const backendDb = {
   },
 
   // Seed with specifically defined scenarios data
-  seedState: (newEmails, newEvents) => {
+  seedState: (newEmails, newEvents, scenarioDetails) => {
     emails = [...newEmails];
     events = [...newEvents];
+
     return { success: true, countEmails: emails.length, countEvents: events.length };
   },
 

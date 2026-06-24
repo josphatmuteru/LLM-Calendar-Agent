@@ -14,13 +14,13 @@ appNetworkRouter.use(express.json());
  * POST /api/scenarios/seed
  * Seeds the backend in-memory database with custom scenario data
  */
-appNetworkRouter.post('/scenarios/seed', (req, res) => {
-  const { emails, calendarEvents } = req.body;
+appNetworkRouter.post('/api/scenarios/seed', (req, res) => {
+  const { emails, calendarEvents, scenarioDetails } = req.body;
   if (!Array.isArray(emails) || !Array.isArray(calendarEvents)) {
     res.status(400).json({ success: false, message: 'Please provide array of "emails" and "calendarEvents" fields.' });
     return;
   }
-  const result = backendDb.seedState(emails, calendarEvents);
+  const result = backendDb.seedState(emails, calendarEvents, scenarioDetails);
   res.json({ success: true, ...result });
 });
 

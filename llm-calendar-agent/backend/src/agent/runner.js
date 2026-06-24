@@ -1,6 +1,6 @@
-import { sendToOllama } from '../llm/ollama.js';
-import AGENT_NETWORK_TOOLS_SPECS from './tools.js'
-import AGENT_FUNCTION_DECLARATIONS from './tools.js'
+import { sendToOllama, sendToOllamaNoStream } from '../llm/ollama.js';
+import {AGENT_NETWORK_TOOLS_SPECS} from './tools.js'
+import {AGENT_FUNCTION_DECLARATIONS, SCENARIOS_AGENT_FUNCTION_DECLARATIONS} from './tools.js'
 
 
 
@@ -293,6 +293,136 @@ export async function runAgentLoop(messages, res) {
 
     res.end();
   } catch (error) {
+    console.error("Agent loop error:", error);
+
+    res.write(
+      `event: error\ndata: ${JSON.stringify(
+        error.message
+      )}\n\n`
+    );
+
+    res.end();
+  }
+}
+
+export async function runScenariosAgentLoop(messages, res) {
+  const MAX_ITERATIONS = 10;
+
+  console.log("got hereee toooooooooooo")
+
+  try {
+    for (let iteration = 0; iteration < MAX_ITERATIONS; iteration++) {
+      let toolCalls = [];
+
+      const responseStream = await sendToOllamaNoStream(
+        messages,
+        SCENARIOS_AGENT_FUNCTION_DECLARATIONS
+      );
+
+      for await (const chunk of responseStream) {
+        // Stream reasoning
+        if (chunk.message?.thinking) {
+          res.write(
+            `event: thinking\ndata: ${JSON.stringify(
+              chunk.message.thinking
+            )}\n\n`
+          );
+        }
+
+        // Stream visible response tokens
+        if (chunk.message?.content) {
+          res.write(
+            `event: content\ndata: ${JSON.stringify(
+              chunk.message.content
+            )}\n\n`
+          );
+        }
+
+        // Collect ALL tool calls emitted during streaming
+        if (chunk.message?.tool_calls?.length) {
+          toolCalls.push(...chunk.message.tool_calls);
+        }
+      }
+
+      // No tool calls -> agent is finished
+      if (toolCalls.length === 0) {
+        res.write(`event: done\ndata: {}\n\n`);
+        res.end();
+        return;
+      }
+
+      // Save assistant tool request
+      messages.push({
+        role: "assistant",
+        tool_calls: toolCalls
+      });
+
+      // Execute tool calls
+      const toolMessages = await Promise.all(
+        toolCalls.map(async (call) => {
+          const toolName = call.function?.name;
+
+          let toolArgs;
+
+          try {
+            toolArgs =
+              typeof call.function?.arguments === "string"
+                ? JSON.parse(call.function.arguments)
+                : call.function?.arguments || {};
+          } catch {
+            toolArgs = {};
+          }
+
+          res.write(
+            `event: thinking\ndata: ${JSON.stringify(
+              `⚡ Running ${toolName}...`
+            )}\n\n`
+          );
+
+          let toolResult;
+
+          try {
+            toolResult = await executeDynamicTool(
+              toolName,
+              toolArgs
+            );
+          } catch (error) {
+            toolResult = {
+              success: false,
+              error: error.message
+            };
+          }
+          console.log(toolName, "///////////")
+
+          // Optional: stream result preview
+          res.write(
+            `event: thinking\ndata: ${JSON.stringify(
+              `✓ ${toolName} completed`
+            )}\n\n`
+          );
+
+          return {
+            role: "tool",
+            tool_name: toolName,
+            tool_call_id: call.id,
+            content: JSON.stringify(toolResult)
+          };
+        })
+      );
+
+      messages.push(...toolMessages);
+    }
+
+    // Safety cutoff
+    res.write(
+      `event: error\ndata: ${JSON.stringify(
+        "Maximum agent iterations reached."
+      )}\n\n`
+    );
+
+    res.end();
+  } catch (error) {
+
     console.error("Agent loop error:", error);
 
     res.write(

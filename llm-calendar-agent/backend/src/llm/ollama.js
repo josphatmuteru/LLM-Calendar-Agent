@@ -14,3 +14,16 @@ export async function sendToOllama(messages, tools = []) {
     stream: true
   });
 }
+
+export async function sendToOllamaNoStream(messages, tools = []) {
+
+
+  // Returns a raw streaming generator object
+  return await ollama.chat({
+    model: "gemma4",
+    messages: messages,
+    tools: tools,
+        think: true,
+    stream: true
+  });
+}

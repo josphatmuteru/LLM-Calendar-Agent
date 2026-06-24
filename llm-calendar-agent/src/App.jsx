@@ -4,6 +4,7 @@ import LLMChatApp from './Components/LLMChatApp.tsx';
 
 
 import { useState } from "react";
+import { streamScenariosAgentChat } from './services/agentApi.js';
 
 export default function App() {
   
@@ -12,6 +13,70 @@ export default function App() {
     const handleSetIsShowingCalendarApp = (state) => {
     setIsShowingCalendarApp(state);
   };
+  // Functional States
+  const [messages, setMessages] = useState([]);
+  const [displayText, setDisplayText] = useState("");
+  const [currentThinking, setCurrentThinking] = useState("");
+  const [currentResponse, setCurrentResponse] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+
+    const handleGenerateScenario = async () => {
+    
+  
+
+      const userMessage = { role: "user", content: "Generate scenario" };
+  
+      setMessages((prev) => [...prev, userMessage]);
+
+      setIsLoading(true);
+      setCurrentThinking("");
+      setCurrentResponse("");
+   
+  
+      const fullConversationHistory = [...messages, userMessage];
+  
+      let liveThinkingBuffer = "";
+      let liveContentBuffer = "";
+  
+      try {
+        await streamScenariosAgentChat(
+          [userMessage],
+          (thinkToken) => {
+            liveThinkingBuffer += thinkToken;
+            setCurrentThinking((prev) => prev + thinkToken);
+          },
+          (contentToken) => {
+            liveContentBuffer += contentToken;
+            setCurrentResponse((prev) => prev + contentToken);
+          },
+          () => {
+            setMessages((prev) => [
+              ...prev,
+              { 
+                role: "assistant", 
+                content: liveContentBuffer.trim() ? liveContentBuffer : "Task complete.",
+                thinking: liveThinkingBuffer.trim() ? liveThinkingBuffer : undefined,
+                isCollapsed: true 
+              }
+            ]);
+            setCurrentThinking("");
+            setCurrentResponse("");
+            setIsLoading(false);
+          }
+        );
+      } catch (error) {
+        console.error("Agent execution breakdown:", error);
+        setIsLoading(false);
+      }
+    };
+
+     messages.map((item, index) => {
+              if (item.role === "assistant") {
+                return (
+            setDisplayText(item.content)
+                )
+              }})
 
   return (
     <div className="min-h-screen w-full bg-[#f4f4f4] flex flex-col items-center justify-center p-4 lg:p-8 overflow-y-auto font-sans">
@@ -32,14 +97,14 @@ export default function App() {
                 Scenario
               </legend>
               <p className="text-sm text-[#222222] font-semibold leading-relaxed">
-               
+               {displayText}
               </p>
             </fieldset>
 
             <div className="flex flex-col shrink-0 md:w-[240px]">
               <div className="flex flex-col justify-between h-full md:pt-[7.5px] gap-2 md:gap-1">
                 <button
-                  // onClick={handleGenerateScenario}
+                  onClick={handleGenerateScenario}
                   className="w-full h-[32px] px-3 bg-[#0b5c9e] hover:bg-[#063c68] text-white text-[11px] sm:text-xs font-bold rounded-lg transition-all border border-[#063c68] cursor-pointer flex items-center justify-center text-center whitespace-nowrap active:scale-98 shadow-xs"
                 >
                   Generate Different Scenario
