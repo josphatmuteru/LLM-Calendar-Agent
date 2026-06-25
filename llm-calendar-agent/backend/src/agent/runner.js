@@ -5,7 +5,7 @@ import {AGENT_FUNCTION_DECLARATIONS, SCENARIOS_AGENT_FUNCTION_DECLARATIONS} from
 
 
 // Base URL configuration for your local backend network service
-const BASE_SERVER_URL = 'http://localhost:3005';
+const BASE_SERVER_URL = 'http://localhost:3006';
 
 /**
  * Creates a fast O(1) hash map dictionary directly from your specs array
@@ -77,6 +77,8 @@ const toolSpecsMap = new Map(
 async function executeDynamicTool(toolName, args) {
   const spec = toolSpecsMap.get(toolName);
 
+ 
+
   if (!spec) {
     throw new Error(`Tool "${toolName}" is not registered in AGENT_NETWORK_TOOLS_SPECS.`);
   }
@@ -121,13 +123,15 @@ async function executeDynamicTool(toolName, args) {
   console.log("Request Trace:", options.method, targetUrl, options.body || '');
 
   const response = await fetch(targetUrl, options);
+
+   console.log("......executeDynamicTool/// response/", options)
   
   if (!response.ok) {
     throw new Error(`Network tool execution failed on ${spec.endpoint}. Status: ${response.status} (${response.statusText})`);
   }
 
   const results = await response.json();
-  console.log("Execution Results:", results);
+  console.log("Execution Res ults:", results);
   
   return results;
 }

@@ -57,6 +57,8 @@ You are a scenario creator.
 Answer clearly and concisely.
 You create scenarios that can be used to demonstrate the capabilities of an calendar scheduling and email client agent who has access to the following tools: ${AGENT_FUNCTION_DECLARATIONS}.
 You come up with characters who will be in the scenarios that include those characters and the user. You create calendar events and email data, that can be found in those scenarios.  
+You use actual names in emails instead of [Username] placeholders.
+You also come up with a short description of the scenario as well as the first user prompt in such a scenario.
 The date today is 2026-06-17
       `
     },

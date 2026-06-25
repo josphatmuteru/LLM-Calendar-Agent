@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import { DEFAULT_EVENTS, getDaysInMonth, formatDateLong, getWeekDays } from './calendarData';
 import { CalendarEvent, CalendarView } from '../types';
+import { io } from 'socket.io-client';
+
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL || ''; 
 
@@ -27,10 +29,58 @@ export default function CalendarApp() {
   const [view, setView] = useState<CalendarView>('Month');
   
   // Storage & state for events
-  const [events, setEvents] = useState<CalendarEvent[]>(() => {
-    const saved = localStorage.getItem('calendar_dashboard_events');
-    return saved ? JSON.parse(saved) : DEFAULT_EVENTS;
-  });
+//   const [events, setEvents] = useState<CalendarEvent[]>(() => {
+//     const saved = localStorage.getItem('calendar_dashboard_events');
+//     return saved ? JSON.parse(saved) : DEFAULT_EVENTS;
+//   });
+
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+
+  
+
+// Points natively to window.location.origin (e.g. http://localhost:3000)
+const socket = io('http://localhost:3006');
+
+socket.on('db_sync_update', (data) => {
+  console.log("Database file updated over middleware mode!", data);
+});
+
+
+useEffect(() => {
+    async function loadInitialEvents() {
+      try {
+    
+
+        const res = await fetch(`${baseUrl}/api/calendar/events`);
+        
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        
+        const initialData = await res.json();
+        console.log(initialData.data)
+        setEvents(initialData.data);
+      } catch (error) {
+        console.error("Failed loading baseline matrix events:", error);
+      } finally {
+ 
+      }
+    }
+
+    loadInitialEvents();
+  }, []); // Empty dependency array ensures this runs exactly once on mount [4]
+
+  // 3. Real-time WebSocket synchronization channel
+  useEffect(() => {
+    socket.on('db_sync_update', (data: { calendarEvents?: CalendarEvent[] }) => {
+      console.log('⚡ Catching backend real-time broadcast payload:', data);
+      if (data.calendarEvents) {
+        setEvents(data.calendarEvents);
+      }
+    });
+
+    return () => {
+      socket.off('db_sync_update');
+    };
+  }, []);
 
   // Current year & month for calendar navigation (default: June 2026)
   const [navYear, setNavYear] = useState(2026);
@@ -58,7 +108,7 @@ export default function CalendarApp() {
       const json = await res.json();
       if (json && json.success && Array.isArray(json.data)) {
         setEvents(json.data);
-        localStorage.setItem('calendar_dashboard_events', JSON.stringify(json.data));
+       // localStorage.setItem('calendar_dashboard_events', JSON.stringify(json.data));
       }
     } catch (err) {
       console.error('Failed to sync events with server:', err);
@@ -66,21 +116,21 @@ export default function CalendarApp() {
   };
 
     // Sync state when local storage is seeded or modified by AI Agent custom tools
-  useEffect(() => {
-    const handleSync = () => {
-      const saved = localStorage.getItem('calendar_dashboard_events');
-      if (saved) {
-        setEvents(JSON.parse(saved));
-      }
-      syncWithServer();
-    };
-    window.addEventListener('storage', handleSync);
-    window.addEventListener('agent-tools-update', handleSync);
-    return () => {
-      window.removeEventListener('storage', handleSync);
-      window.removeEventListener('agent-tools-update', handleSync);
-    };
-  }, []);
+//   useEffect(() => {
+//     const handleSync = () => {
+//       const saved = localStorage.getItem('calendar_dashboard_events');
+//       if (saved) {
+//         setEvents(JSON.parse(saved));
+//       }
+//       syncWithServer();
+//     };
+//     window.addEventListener('storage', handleSync);
+//     window.addEventListener('agent-tools-update', handleSync);
+//     return () => {
+//       window.removeEventListener('storage', handleSync);
+//       window.removeEventListener('agent-tools-update', handleSync);
+//     };
+//   }, []);
 
 //   // Sync state with localStorage
 //   useEffect(() => {

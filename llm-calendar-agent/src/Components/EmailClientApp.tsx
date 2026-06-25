@@ -5,7 +5,7 @@ import EmailList from './EmailList';
 import EmailDetail from './EmailDetail';
 import ComposeModal from './ComposeModal';
 import { Mail, CheckCircle, Info, Feather } from 'lucide-react';
-
+import { io } from 'socket.io-client';
 
 
 
@@ -130,11 +130,54 @@ Luxury beaches are waiting for your arrival today!`,
   }
 ];
 
+const socket = io('http://localhost:3006');
+
+
+
 export default function EmailClientApp() {
-  const [emails, setEmails] = useState<Email[]>(() => {
-    const saved = localStorage.getItem('company_emails_client');
-    return saved ? JSON.parse(saved) : INITIAL_EMAILS;
-  });
+  // const [emails, setEmails] = useState<Email[]>(() => {
+  //   const saved = localStorage.getItem('company_emails_client');
+  //   return saved ? JSON.parse(saved) : INITIAL_EMAILS;
+  // });
+
+
+const [emails, setEmails] = useState<Email[]>([]);
+
+  useEffect(() => {
+    async function loadInitialEvents() {
+      try {
+     
+       // Using origin dynamically
+        const res = await fetch(`${baseUrl}/api/emails`);
+        
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        
+        const initialData = await res.json();
+        setEmails(initialData.data);
+      } catch (error) {
+        console.error("Failed loading baseline matrix events:", error);
+      } finally {
+       
+      }
+    }
+
+    loadInitialEvents();
+  }, []); // Empty dependency array ensures this runs exactly once on mount [4]
+
+  // 3. Real-time WebSocket synchronization channel
+  useEffect(() => {
+    socket.on('db_sync_update', (data: { emails?: Email[] }) => {
+      console.log('⚡ Catching backend real-time broadcast payload:', data);
+      if (data.emails) {
+        setEmails(data.emails);
+      }
+    });
+
+    return () => {
+      socket.off('db_sync_update');
+    };
+  }, []);
+
 
   const [selectedFolder, setSelectedFolder] = useState<FolderType>('Inbox');
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>('1');
@@ -161,35 +204,35 @@ const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
     }
   };
 
-  useEffect(() => {
-    syncWithServer();
-    const interval = setInterval(syncWithServer, 2000);
-    return () => clearInterval(interval);
-  }, []);
+  // useEffect(() => {
+  //   syncWithServer();
+  //   const interval = setInterval(syncWithServer, 2000);
+  //   return () => clearInterval(interval);
+  // }, []);
 
-  // Sync state with local storage/server when altered by scenario transitions or AI Agent custom tools
-  useEffect(() => {
-    const handleSync = () => {
-      const saved = localStorage.getItem('company_emails_client');
-      if (saved) {
-        setEmails(JSON.parse(saved));
-        // Reset selected email to the first one available in the folder
-        const list = JSON.parse(saved) as Email[];
-        if (list.length > 0) {
-          setSelectedEmailId(list[0].id);
-        } else {
-          setSelectedEmailId(null);
-        }
-      }
-      syncWithServer();
-    };
-    window.addEventListener('storage', handleSync);
-    window.addEventListener('agent-tools-update', handleSync);
-    return () => {
-      window.removeEventListener('storage', handleSync);
-      window.removeEventListener('agent-tools-update', handleSync);
-    };
-  }, []);
+  // // Sync state with local storage/server when altered by scenario transitions or AI Agent custom tools
+  // useEffect(() => {
+  //   const handleSync = () => {
+  //     const saved = localStorage.getItem('company_emails_client');
+  //     if (saved) {
+  //       setEmails(JSON.parse(saved));
+  //       // Reset selected email to the first one available in the folder
+  //       const list = JSON.parse(saved) as Email[];
+  //       if (list.length > 0) {
+  //         setSelectedEmailId(list[0].id);
+  //       } else {
+  //         setSelectedEmailId(null);
+  //       }
+  //     }
+  //     syncWithServer();
+  //   };
+  //   window.addEventListener('storage', handleSync);
+  //   window.addEventListener('agent-tools-update', handleSync);
+  //   return () => {
+  //     window.removeEventListener('storage', handleSync);
+  //     window.removeEventListener('agent-tools-update', handleSync);
+  //   };
+  // }, []);
 
   // Toast auto-expiry
   useEffect(() => {

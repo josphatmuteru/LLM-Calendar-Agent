@@ -3,8 +3,16 @@ import EmailClientApp from './Components/emailClientApp.tsx';
 import LLMChatApp from './Components/LLMChatApp.tsx';
 
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { streamScenariosAgentChat } from './services/agentApi.js';
+import { io } from 'socket.io-client';
+
+const socket = io('http://localhost:3006');
+
+socket.on('db_sync_update', (data) => {
+  console.log("Database file updated over middleware mode!", data);
+});
+
 
 export default function App() {
   
@@ -71,12 +79,37 @@ export default function App() {
       }
     };
 
-     messages.map((item, index) => {
-              if (item.role === "assistant") {
-                return (
-            setDisplayText(item.content)
-                )
-              }})
+
+const [scenarioDescription, setScenarioDescription] = useState("");
+
+  
+
+  // 3. Real-time WebSocket synchronization channel
+  useEffect(() => {
+    socket.on('db_sync_update', (data) => {
+      console.log('⚡ Catching backend real-time broadcast payload:', data);
+      if (data.scenarioDescriptionDetails) {
+        setScenarioDescription(data.scenarioDescriptionDetails.scenarioDescription);
+      }
+    });
+
+    return () => {
+      socket.off('db_sync_update');
+    };
+  }, []);
+
+
+//     console.log(messages)
+// useEffect(() => {
+//      messages.map((item, index) => {
+//               if (item.role === "assistant") {
+//                 return (
+//             setDisplayText(item.content)
+//                 )
+//               }})
+
+// },[displayText] )
+
 
   return (
     <div className="min-h-screen w-full bg-[#f4f4f4] flex flex-col items-center justify-center p-4 lg:p-8 overflow-y-auto font-sans">
@@ -97,7 +130,7 @@ export default function App() {
                 Scenario
               </legend>
               <p className="text-sm text-[#222222] font-semibold leading-relaxed">
-               {displayText}
+               {scenarioDescription}
               </p>
             </fieldset>
 

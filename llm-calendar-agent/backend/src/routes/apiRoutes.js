@@ -2,6 +2,7 @@ import express from 'express';
 import { backendDb } from '../data/backendDb.js';
 
 export const appNetworkRouter = express.Router();
+
 appNetworkRouter.use(express.json());
 
 /**
@@ -14,13 +15,15 @@ appNetworkRouter.use(express.json());
  * POST /api/scenarios/seed
  * Seeds the backend in-memory database with custom scenario data
  */
-appNetworkRouter.post('/api/scenarios/seed', (req, res) => {
-  const { emails, calendarEvents, scenarioDetails } = req.body;
+appNetworkRouter.post('/scenarios/seed', (req, res) => {
+  console.log(",,,,,,,,,,,,,,,,,,,,,,,,nnnnnnnnnnnnnnnnnnnnnn,n,n,n,",req.body)
+
+  const { emails, calendarEvents, scenarioDescriptionDetails } = req.body;
   if (!Array.isArray(emails) || !Array.isArray(calendarEvents)) {
     res.status(400).json({ success: false, message: 'Please provide array of "emails" and "calendarEvents" fields.' });
     return;
   }
-  const result = backendDb.seedState(emails, calendarEvents, scenarioDetails);
+  const result = backendDb.seedState(emails, calendarEvents, scenarioDescriptionDetails);
   res.json({ success: true, ...result });
 });
 
@@ -154,6 +157,21 @@ appNetworkRouter.post('/email', (req, res) => {
   }
   res.status(211).json({ success: true, message: 'Email sent/created successfully.', data: created });
 });
+
+appNetworkRouter.post('/test', (req, res) => {
+  const testObject = req.body;
+  if (!testObject) {
+    res.status(400).json({
+      success: false,
+      message: 'testObject is required.'
+    });
+    return;
+  }
+
+ console.log(testObject)
+  res.status(211).json({ success: true, message: 'testObject tested successfully.', data: testObject });
+});
+
 
 /**
  * PUT /api/emails/:id/archive

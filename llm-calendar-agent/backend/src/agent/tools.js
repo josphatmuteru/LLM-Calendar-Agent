@@ -208,7 +208,7 @@ export const AGENT_NETWORK_TOOLS_SPECS = [
     }
   },
 
-  {
+{
     name: 'seed_scenarios',
     endpoint: '/api/scenarios/seed',
     method: 'POST',
@@ -306,11 +306,27 @@ export const AGENT_NETWORK_TOOLS_SPECS = [
             },
             required: ['id', 'title', 'time', 'date', 'color']
           }
+        }, 
+        scenarioDescriptionDetails: {
+          type: 'OBJECT',
+          description: 'Contextual meta-details describing the underlying scenario parameters and initialization conditions.',
+          properties: {
+            scenarioDescription: {
+              type: 'STRING',
+              description: 'A comprehensive summary text outlining the narrative backdrop or context for this specific test case.'
+            },
+            firstUserPrompt: {
+              type: 'STRING',
+              description: 'The initial operational message or foundational task prompt issued to kick off the user interaction.'
+            }
+          },
+          required: ['scenarioDescription', 'firstUserPrompt']
         }
       },
-      required: ['emails', 'calendarEvents']
+      required: ['emails', 'calendarEvents', 'scenarioDescriptionDetails']
     }
-  },
+}
+
 ];
 
 
@@ -520,7 +536,7 @@ export const AGENT_FUNCTION_DECLARATIONS = [
 
 
 export const SCENARIOS_AGENT_FUNCTION_DECLARATIONS = [
-    {
+{
     type: 'function',
     function: {
       name: 'seed_scenarios',
@@ -619,10 +635,26 @@ export const SCENARIOS_AGENT_FUNCTION_DECLARATIONS = [
                 'read'
               ]
             }
+          },
+          scenarioDescriptionDetails: {
+            type: 'object',
+            description: 'Contextual properties describing the high-level scenario goals and the initial prompt execution string.',
+            properties: {
+              scenarioDescription: {
+                type: 'string',
+                description: 'The high-level system overview text describing the goals or condition of this test scenario.'
+              },
+              firstUserPrompt: {
+                type: 'string',
+                description: 'The exact starting prompt text string sent by the user to initialize the sequence.'
+              }
+            },
+            required: ['scenarioDescription', 'firstUserPrompt']
           }
         },
-        required: ['emails', 'calendarEvents']
+        required: ['emails', 'calendarEvents', 'scenarioDescriptionDetails']
       }
     }
-  },
+}
+
 ]

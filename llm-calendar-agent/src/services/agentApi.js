@@ -1,7 +1,7 @@
 export async function streamScenariosAgentChat(messages, onThinking, onContent, onDone) {
 
     
-  const response = await fetch('http://localhost:3005/chat/generate-scenario', {
+  const response = await fetch('http://localhost:3006/chat/generate-scenario', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ messages})
@@ -42,7 +42,7 @@ export async function streamScenariosAgentChat(messages, onThinking, onContent, 
 export async function streamAgentChat(messages, onThinking, onContent, onDone) {
 
     
-  const response = await fetch('http://localhost:3005/chat', {
+  const response = await fetch('http://localhost:3006/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ messages})
@@ -88,7 +88,7 @@ export async function sendMessage(message) {
 console.log(message)
 
 const response = await fetch(
-  "http://localhost:3005/chat",
+  "http://localhost:3006/chat",
    {
     method: "POST", 
     headers: {

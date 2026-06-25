@@ -67,6 +67,7 @@ function getStoredEmails() {
 
 function setStoredEmails(emails) {
   if (typeof localStorage === 'undefined') return;
+  
   localStorage.setItem(EMAILS_STORAGE_KEY, JSON.stringify(emails));
   notifyStorageUpdate();
 }
@@ -91,6 +92,22 @@ function setStoredEvents(events ) {
 // Backend in-memory state stores
 let emails = [...DEFAULT_EMAILS];
 let events = [...DEFAULT_CALENDAR_EVENTS];
+let scenarioDescriptionDetails = {scenarioDescription: "", firstUserPrompt: ""}
+
+export function getEmails () {
+  return emails
+}
+
+export function getEvents() {
+
+  return events
+}
+
+export function getScenarioDescriptionDetails() {
+
+  return scenarioDescriptionDetails
+}
+
 
 // 1. Convert any erratic time string ("10.00 AM", "16.30 AM", "14:00") into minutes from midnight
 function timeToMinutes(timeStr) {
@@ -142,13 +159,20 @@ function parseTimeInterval(timeRangeStr) {
 export const backendDb = {
   // Get entire database state (for initial sync/scenarios sync)
   getState: () => {
-    return { emails, events };
+    return { emails, events, scenarioDescriptionDetails };
   },
 
   // Seed with specifically defined scenarios data
-  seedState: (newEmails, newEvents, scenarioDetails) => {
+  seedState: (newEmails, newEvents, newScenarioDescriptionDetails) => {
     emails = [...newEmails];
     events = [...newEvents];
+    scenarioDescriptionDetails = newScenarioDescriptionDetails
+
+    
+
+    setStoredEmails(emails);
+    setStoredEvents(events);
+console.log("////seeeded")
 
     return { success: true, countEmails: emails.length, countEvents: events.length };
   },
@@ -157,6 +181,10 @@ export const backendDb = {
   resetToDefaults: () => {
     emails = [...DEFAULT_EMAILS];
     events = [...DEFAULT_CALENDAR_EVENTS];
+
+        setStoredEmails(emails);
+    setStoredEvents(events);
+
     return { success: true };
   },
 
@@ -210,6 +238,8 @@ export const backendDb = {
       color: args.color || 'blue'
     };
     events.push(newEvent);
+       
+    setStoredEvents(events);
     return newEvent;
   },
 
@@ -219,6 +249,8 @@ export const backendDb = {
     if (events.length === originalLength) {
       return { success: false, message: `Event with ID ${args.id} not found.` };
     }
+      
+    setStoredEvents(events);
     return { success: true, message: `Event #${args.id} successfully cancelled and removed.` };
   },
 
@@ -329,6 +361,9 @@ export const backendDb = {
       read: true
     };
     emails.unshift(newEmail);
+
+        setStoredEmails(emails);
+   
     return newEmail;
   },
 
@@ -338,6 +373,9 @@ export const backendDb = {
       return { success: false, message: `Email with ID ${args.id} not found.` };
     }
     emails[index].folder = 'Archive';
+    
+    setStoredEmails(emails);
+  
     return { success: true, message: `Email #${args.id} successfully moved to Archive folder.` };
   },
 
@@ -349,9 +387,15 @@ export const backendDb = {
 
     if (emails[index].folder === 'Trash') {
       emails = emails.filter(e => e.id !== args.id);
+      
+      setStoredEmails(emails);
+
       return { success: true, message: `Email #${args.id} permanently deleted.` };
     } else {
       emails[index].folder = 'Trash';
+
+      setStoredEmails(emails);
+
       return { success: true, message: `Email #${args.id} moved to Trash.` };
     }
   },
@@ -360,6 +404,9 @@ export const backendDb = {
     const index = emails.findIndex(e => e.id === args.id);
     if (index === -1) return { success: false };
     emails[index].read = args.read;
+
+    setStoredEmails(emails);
+
     return { success: true };
   },
 
@@ -369,6 +416,9 @@ export const backendDb = {
       return { success: false, message: `Email with ID ${args.id} not found.` };
     }
     emails[index].folder = 'Inbox';
+
+    setStoredEmails(emails);
+
     return { success: true, message: `Email #${args.id} successfully restored to Inbox.` };
   }
 };
